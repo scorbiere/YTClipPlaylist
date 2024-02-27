@@ -9,7 +9,6 @@
             <a v-if="sharableLink" :href="sharableLink" target="_blank">Open Sharable Link</a>
         </header>
         <div class="content-area">
-
             <main>
                 <div class="video-url-input">
                     <label for="videoUrl">Video URL:</label>
@@ -21,20 +20,26 @@
                     :startTime="selectedSegment.startTime" :pauseTime="selectedSegment.endTime" />
             </main>
             <aside>
-                <input v-model="filterText" type="text" placeholder="Filter segments by name">
-                <button @click="addSegment">Add New Segment</button>
-                <ul class="segments-list">
-                    <SegmentItem v-for="(segment, index) in segments" :key="index" :segment="segment" :index="index"
-                        :class="{ 'selected-segment': segment === selectedSegment }" @click="selectSegment(segment)"
-                        @delete-segment="removeSegment" @set-start-time="setCurrentTime($event, 'start')"
-                        @set-end-time="setCurrentTime($event, 'end')" />
-                </ul>
+                <draggable v-model="segments" item-key="id" @end="onEnd" class="segments-list">
+                    <template #header>
+                        <button @click="addSegment">Add New Segment</button>
+                    </template>
+                    <template #item="{ element, index }">
+                        <SegmentItem :segment="element" :key="element.id" :index="index"
+                            :class="{ 'selected-segment': element === selectedSegment }"
+                            @click="() => selectSegment(element)" @delete-segment="removeSegment"
+                            @set-start-time="() => setCurrentTime(element, 'start')"
+                            @set-end-time="() => setCurrentTime(element, 'end')" />
+                    </template>
+                </draggable>
             </aside>
         </div>
     </div>
 </template>
   
 <script>
+import draggable from 'vuedraggable';
+
 import YouTubePlayer from '@/components/YouTubePlayer.vue';
 import SegmentItem from '@/components/SegmentItem.vue';
 import { segmentMixin } from '@/mixins/segmentMixin.js';
@@ -43,6 +48,7 @@ export default {
     mixins: [segmentMixin],
     components: {
         YouTubePlayer,
+        draggable,
         SegmentItem,
     },
     name: 'SegmentSelector',
@@ -54,6 +60,7 @@ export default {
             selectedSegment: {},
             filterText: '',
             sharableLink: '',
+            maxSegmentId: 0,
         };
     },
     watch: {
@@ -158,6 +165,7 @@ export default {
             const videoId = this.extractVideoId(this.videoUrl);
             if (videoId) {
                 this.segments.push({
+                    id: this.maxSegmentId++,
                     name: "",
                     videoId: videoId, // Storing only the video ID
                     startTime: this.$refs.youtubePlayer.getCurrentTime(),
@@ -179,6 +187,20 @@ export default {
                 segment.startTime = this.$refs.youtubePlayer.getCurrentTime();
             } else if (timeType === 'end') {
                 segment.endTime = this.$refs.youtubePlayer.getCurrentTime();
+            }
+        },
+        onEnd(event) {
+            // event.oldIndex - the index of the item before drag started
+            // event.newIndex - the index of the item after drag ended
+            const oldIndex = event.oldIndex - 1;
+            const newIndex = event.newIndex - 1;
+            console.log(`Moved item from index ${oldIndex} to ${newIndex}`);
+            // console.log("old", this.segments[oldIndex], "new", this.segments[newIndex], ...this.segments);
+
+            // Check if the item was moved (the indices are different)
+            if (oldIndex !== newIndex) {
+                // this.segments = [...this.segments];
+                // console.log(movedItem, this.segments);
             }
         },
     },
@@ -207,10 +229,12 @@ export default {
             }
         }
 
+        this.segments = this.segments.filter(s => s); // remove null entry
+
         if (this.segments && this.segments.length) {
             this.selectSegment(this.segments[0]);
+            this.segments.forEach(segment => segment.id = this.maxSegmentId++);
         }
-        // Initialize the YouTube player here as well
     },
 };
 </script>
