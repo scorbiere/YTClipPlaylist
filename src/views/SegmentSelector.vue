@@ -1,12 +1,24 @@
 <template>
     <div class="segment-selector">
         <header>
-            <h1>Video Segment Selector</h1>
-            <input type="file" @change="loadJson" ref="fileInput" style="display: none;" />
-            <button @click="triggerFileInput">Load JSON File</button>
-            <button @click="saveJson">Save/Download JSON File</button>
-            <button @click="createSharableLink">Create a Sharable Link</button>
-            <a v-if="sharableLink" :href="sharableLink" target="_blank">Open Sharable Link</a>
+            <div style="width: 100%;">
+                <h1 style="text-align: center;">Video Segment Selector</h1>
+                <div>
+                    <input type="file" @change="loadJson" ref="fileInput" style="display: none;" />
+                    <button @click="triggerFileInput">Load JSON File</button>
+                    <button @click="saveJson">Save/Download JSON File</button>
+                </div>
+                <div>
+                    Style: <select v-model="selectedStyle"
+                        @change="() => { console.log('selectedStyle', this.selectedStyle) }">
+                        <option v-for="option in styleOptions" :key="option.id" :value="option.id">
+                            {{ option.name }}
+                        </option>
+                    </select>
+                    <button @click="createSharableLink">Create a Sharable Link</button>
+                    <a v-if="sharableLink" :href="sharableLink" target="_blank">Open Sharable Link</a>
+                </div>
+            </div>
         </header>
         <div class="content-area">
             <main>
@@ -43,6 +55,16 @@ import draggable from 'vuedraggable';
 import YouTubePlayer from '@/components/YouTubePlayer.vue';
 import SegmentItem from '@/components/SegmentItem.vue';
 import { segmentMixin } from '@/mixins/segmentMixin.js';
+import axios from 'axios';
+
+function shortenURL(longUrl) {
+    return axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`)
+        .then(response => response.data)
+        .catch(error => {
+            console.error('Erreur lors de la création de l’URL courte :', error);
+            return longUrl; // Retournez l'URL originale en cas d'erreur
+        });
+}
 
 export default {
     mixins: [segmentMixin],
@@ -61,6 +83,12 @@ export default {
             filterText: '',
             sharableLink: '',
             maxSegmentId: 0,
+            styleOptions: [
+                { id: '', name: 'Default' },
+                { id: 'mma', name: 'Momentum' },
+                // Ajoutez d'autres options ici
+            ],
+            selectedStyle: '',
         };
     },
     watch: {
@@ -121,15 +149,17 @@ export default {
             const compactSegments = this.convertToCompactFormat(this.segments);
             const jsonData = JSON.stringify(compactSegments);
             const base64EncodedData = btoa(encodeURIComponent(jsonData)); // Encode the JSON string as Base64
-            const viewerUrl = `${window.location.origin}/viewer?data=${base64EncodedData}`; // Construct the viewer URL with the encoded data as a parameter
+            const viewerStyle = this.selectedStyle && ('/' + this.selectedStyle) || '';
+            const viewerUrl = `${window.location.origin}/viewer${viewerStyle}?data=${base64EncodedData}`; // Construct the viewer URL with the encoded data as a parameter
 
             // Check if the URL exceeds 2000 characters, a common practical limit
             if (viewerUrl.length > 2000) {
                 alert("The generated link is too long and might not be supported by some browsers. Please reduce the number of segments.");
             } else {
-                this.sharableLink = viewerUrl;
-                window.focus(); // Attempt to focus the window before accessing the clipboard
-                this.copyToClipboard(viewerUrl);
+                shortenURL(viewerUrl).then(shortUrl => {
+                    this.sharableLink = shortUrl;
+                    this.copyToClipboard(shortUrl);
+                });
             }
         },
         copyToClipboard(text) {

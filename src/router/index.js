@@ -9,9 +9,10 @@ const routes = [
     component: SegmentSelector,
   },
   {
-    path: '/viewer',
+    path: '/viewer/:customHeader?',
     name: 'ViewerInterface',
     component: ViewerInterface,
+    props: true,
   },
 ];
 

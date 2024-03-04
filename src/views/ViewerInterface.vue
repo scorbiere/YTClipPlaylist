@@ -1,13 +1,14 @@
 <template>
     <div class="viewer-interface">
         <header>
-            <h1>Video Segment Viewer</h1>
+            <Momentum v-if="customHeader === 'mma'" />
+            <h1 v-else>Video Segment Viewer</h1>
         </header>
         <div class="content-area">
             <main>
                 <YouTubePlayer class="youtube-player" ref="youtubePlayer" :videoId="selectedSegment.videoId"
                     :startTime="selectedSegment.startTime" :pauseTime="selectedSegment.endTime"
-                    @over-pause-time="nextSegment" />
+                    @over-pause-time="nextSegment" :enablePause="autoPause" />
             </main>
             <aside>
                 <h2>Segments</h2>
@@ -16,9 +17,9 @@
                 </div>
                 <div>
                     <ul class="segments-list">
-                        <SegmentItem v-for="(segment, index) in filteredSegments" :key="index" :segment="segment" :index="index"
-                            :class="{ 'selected-segment': segment === selectedSegment }" @click="selectSegment(segment)"
-                            :is-read-only="true" />
+                        <SegmentItem v-for="(segment, index) in filteredSegments" :key="index" :segment="segment"
+                            :index="index" :class="{ 'selected-segment': segment === selectedSegment }"
+                            @click="selectSegment(segment)" :is-read-only="true" />
                     </ul>
                 </div>
             </aside>
@@ -29,6 +30,7 @@
 <script>
 import YouTubePlayer from '@/components/YouTubePlayer.vue';
 import SegmentItem from '@/components/SegmentItem.vue';
+import Momentum from '@/components/headers/MomentumMovementAcademy.vue';
 import { segmentMixin } from '@/mixins/segmentMixin.js';
 
 export default {
@@ -36,13 +38,21 @@ export default {
     components: {
         YouTubePlayer,
         SegmentItem,
+        Momentum,
     },
     name: 'ViewerInterface',
+    props: {
+        customHeader: {
+            type: String,
+            default: '' // Fournit une valeur par défaut si 'type' n'est pas passé
+        }
+    },
     data() {
         return {
             segments: [],
             selectedSegment: {},
             filterText: '',
+            autoPause: false,
         };
     },
     computed: {
@@ -74,6 +84,11 @@ export default {
         },
         selectSegment(segment) {
             this.selectedSegment = segment;
+            const segmentList = this.filteredSegments;
+            const isLast = segmentList && segmentList.length &&
+                segment === segmentList[segmentList.length - 1]
+            this.autoPause = !!isLast;
+            // console.log("autoPause", this.autoPause, isLast, segmentList, segmentList.length);
         },
     },
     mounted() {

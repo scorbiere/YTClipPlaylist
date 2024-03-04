@@ -8,12 +8,14 @@
         <div>
             <span>Start: {{ formatTime(localSegment.startTime) }}&nbsp;</span>
             <!-- Conditionally display set start time button -->
-            <span v-if="!isReadOnly" @click="$emit('set-start-time', localSegment)" class="time-setter fa fa-pencil" title="Set with the current play time"></span>
+            <span v-if="!isReadOnly" @click="$emit('set-start-time', localSegment)" class="time-setter fa fa-pencil"
+                title="Set with the current play time"></span>
         </div>
         <div>
             <span>End: {{ formatTime(localSegment.endTime) }}&nbsp;</span>
             <!-- Conditionally display set end time button -->
-            <span v-if="!isReadOnly" @click="$emit('set-end-time', localSegment)" class="time-setter fa fa-pencil" title="Set with the current play time"></span>
+            <span v-if="!isReadOnly" @click="$emit('set-end-time', localSegment)" class="time-setter fa fa-pencil"
+                title="Set with the current play time"></span>
         </div>
         <!-- The delete button can also be conditionally shown or hidden -->
         <button v-if="!isReadOnly" class="delete-button" @click="$emit('delete-segment', segment)">X</button>
@@ -23,12 +25,12 @@
 <script>
 export default {
     props: {
-    segment: Object,
-    isReadOnly: {
-        type: Boolean,
-        default: false,
+        segment: Object,
+        isReadOnly: {
+            type: Boolean,
+            default: false,
+        },
     },
-},
     data() {
         return {
             localSegment: this.segment,
