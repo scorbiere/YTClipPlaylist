@@ -120,7 +120,7 @@ export default {
                     // Assuming content is JSON and needs to be processed
                     try {
                         const compactData = JSON.parse(content);
-                        this.segments = this.convertFromCompactFormat(compactData);
+                        this.segments = this.convertFromCompact(compactData);
                     } catch (error) {
                         console.error("Error parsing JSON:", error);
                         // Handle error
@@ -150,7 +150,7 @@ export default {
             const jsonData = JSON.stringify(compactSegments);
             const base64EncodedData = btoa(encodeURIComponent(jsonData)); // Encode the JSON string as Base64
             const viewerStyle = this.selectedStyle && ('/' + this.selectedStyle) || '';
-            const viewerUrl = `${window.location.origin}/viewer${viewerStyle}?data=${base64EncodedData}`; // Construct the viewer URL with the encoded data as a parameter
+            const viewerUrl = `${window.location.href}viewer${viewerStyle}?data=${base64EncodedData}`; // Construct the viewer URL with the encoded data as a parameter
 
             // Check if the URL exceeds 2000 characters, a common practical limit
             if (viewerUrl.length > 2000) {
