@@ -5,15 +5,11 @@ import ViewerInterface from '../views/ViewerInterface.vue';
 const routes = [
   {
     path: '/',
-    redirect: { name: 'SegmentSelector' }
-  },
-  {
-    path: '/YTClipPlaylist/',
     name: 'SegmentSelector',
     component: SegmentSelector,
   },
   {
-    path: '/YTClipPlaylist/viewer/:customHeader?',
+    path: '/viewer/:customHeader?',
     name: 'ViewerInterface',
     component: ViewerInterface,
     props: true,
