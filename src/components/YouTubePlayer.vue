@@ -27,7 +27,8 @@ export default {
             immediate: false, // Changed to false because immediate seek might not work if player isn't ready
             handler(newVal) {
                 if (newVal !== undefined && this.player && typeof this.player.seekTo === 'function') {
-                    this.player.seekTo(newVal, true);
+                    const seekResult = this.player.seekTo(newVal, true);
+                    console.log("startTime, seekResult", seekResult);
                     this.player.playVideo();
                 }
             },
@@ -72,6 +73,7 @@ export default {
             } else if (!component.player) {
                 onYouTubeIframeAPIReady();
             } else {
+                component.isInit = true;
                 component.player.loadVideoById({ videoId: videoId, startSeconds: component.startTime, endSeconds: component.pauseTime });
             }
         },
@@ -90,8 +92,10 @@ export default {
                 event.target.mute(); // Optional: Mute the player to increase likelihood of autoplay working
                 event.target.playVideo();
             }
-            else if (this.isInit) {
-                event.target.seekTo(this.startTime, true);
+            else if (this.isInit && event.data === window.YT.PlayerState.PLAYING) {
+                console.log('This is init, status is "', event.data, '"  .');
+                const seekResult = event.target.seekTo(this.startTime, true);
+                console.log('This is init, seekResult is "', seekResult, '"  .');
                 this.startCheckingPlayProgress();
                 this.isInit = false;
             }
